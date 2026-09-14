@@ -1,46 +1,47 @@
 package com.taskplanner.app.worker
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.taskplanner.app.alarm.AlarmScheduler
-import com.taskplanner.app.data.local.AppDatabase
-import com.taskplanner.app.data.model.EventType
-import com.taskplanner.app.data.model.SyncedEvent
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.util.regex.Pattern
+import com.taskplanner.app.notification.NotificationHelper
 
 class GmailSyncWorker(
-    appContext: Context,
-    workerParams: WorkerParameters
-) : CoroutineWorker(appContext, workerParams) {
+    context: Context,
+    params: WorkerParameters
+) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        try {
-            val database = AppDatabase.getInstance(applicationContext)
-            val scheduler = AlarmScheduler(applicationContext)
+    override suspend fun doWork(): Result {
+        return try {
+            Log.d(TAG, "Starting Gmail sync worker")
+            
+            // Show notification that sync is in progress
+            val notificationHelper = NotificationHelper(applicationContext)
+            notificationHelper.showGmailSyncNotification("Syncing emails...")
 
-            // 1. Query Gmail API for messages matching workshop, bootcamp, webinar
-            val detectedEvents = detectEventsFromGmail()
+            // Perform Gmail sync operation
+            performGmailSync()
 
-            // 2. Persist to DB and schedule 30-minute advance notifications
-            for (event in detectedEvents) {
-                database.plannerDao().insertEvent(event)
-                scheduler.scheduleEventReminder(event)
-                database.plannerDao().markReminderScheduled(event.eventId)
-            }
-
+            Log.d(TAG, "Gmail sync completed successfully")
             Result.success()
         } catch (e: Exception) {
-            if (runAttemptCount < 3) Result.retry() else Result.failure()
+            Log.e(TAG, "Gmail sync failed", e)
+            Result.retry()
         }
     }
 
-    private fun detectEventsFromGmail(): List<SyncedEvent> {
-        // Authenticated Gmail API queries here:
-        // Query: "subject:(workshop OR bootcamp OR webinar) OR {workshop bootcamp webinar} newer_than:7d"
-        // Extracts .ics attachments or regex patterns for meeting links & timestamps
-        return emptyList()
+    private suspend fun performGmailSync() {
+        // TODO: Implement actual Gmail sync logic
+        // This would involve:
+        // 1. Getting Gmail API service
+        // 2. Fetching emails
+        // 3. Storing them in local database
+        
+        // For now, simulate a network operation
+        kotlinx.coroutines.delay(1000)
+    }
+
+    companion object {
+        private const val TAG = "GmailSyncWorker"
     }
 }

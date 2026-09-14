@@ -5,96 +5,96 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import com.taskplanner.app.R
 import com.taskplanner.app.ui.MainActivity
-import java.util.Locale
 
 class NotificationHelper(private val context: Context) {
 
-    private val notificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     fun createChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val hourlyChannel = NotificationChannel(
-                CHANNEL_HOURLY,
-                "Hourly Focus Check-In",
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = "Sends reminders every hour from 6am to 11pm"
-            }
-
-            val eventChannel = NotificationChannel(
-                CHANNEL_EVENTS,
-                "Workshop & Webinar Alerts",
+            val remindersChannel = NotificationChannel(
+                CHANNEL_ID_REMINDERS,
+                "Task Reminders",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "High priority 30-minute alerts before bootcamps, webinars, and workshops"
-                enableVibration(true)
+                description = "Notifications for hourly and event reminders"
             }
 
-            notificationManager.createNotificationChannels(listOf(hourlyChannel, eventChannel))
+            val syncChannel = NotificationChannel(
+                CHANNEL_ID_SYNC,
+                "Gmail Sync",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Notifications for Gmail synchronization"
+            }
+
+            notificationManager.createNotificationChannel(remindersChannel)
+            notificationManager.createNotificationChannel(syncChannel)
         }
     }
 
-    fun showHourlyNotification(hour: Int, pendingTaskCount: Int = 0) {
-        val formattedTime = String.format(Locale.getDefault(), "%02d:00", hour)
-        val content = if (pendingTaskCount > 0) {
-            "You have $pendingTaskCount pending item(s) for the hour."
-        } else {
-            "Plan your tasks and focus priorities for this hour."
-        }
-
-        val openAppIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("EXTRA_HOUR", hour)
-        }
+    fun showHourlyReminderNotification() {
+        val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             context,
-            hour,
-            openAppIntent,
+            HOURLY_REMINDER_NOTIFICATION_ID,
+            intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_HOURLY)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setContentTitle("Hourly Check-in ($formattedTime)")
-            .setContentText(content)
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID_REMINDERS)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("Task Planner Reminder")
+            .setContentText("Time to check your tasks!")
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
 
-        notificationManager.notify(NOTIFICATION_ID_HOURLY_BASE + hour, notification)
+        notificationManager.notify(HOURLY_REMINDER_NOTIFICATION_ID, notification)
     }
 
-    fun showEventNotification(title: String, eventType: String, meetingLink: String?) {
-        val builder = NotificationCompat.Builder(context, CHANNEL_EVENTS)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("Starting in 30 Minutes: $title")
-            .setContentText("Your $eventType session starts in 30 minutes.")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+    fun showEventReminderNotification(title: String = "Event Reminder", message: String = "You have an upcoming event") {
+        val intent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            EVENT_REMINDER_NOTIFICATION_ID,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID_REMINDERS)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .build()
 
-        if (!meetingLink.isNullOrBlank()) {
-            val linkIntent = Intent(Intent.ACTION_VIEW, Uri.parse(meetingLink))
-            val pendingLinkIntent = PendingIntent.getActivity(
-                context,
-                title.hashCode(),
-                linkIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            builder.addAction(android.R.drawable.ic_menu_slides, "Join Session", pendingLinkIntent)
-        }
+        notificationManager.notify(EVENT_REMINDER_NOTIFICATION_ID, notification)
+    }
 
-        notificationManager.notify(title.hashCode(), builder.build())
+    fun showGmailSyncNotification(message: String = "Gmail sync in progress...") {
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID_SYNC)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("Gmail Sync")
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+
+        notificationManager.notify(GMAIL_SYNC_NOTIFICATION_ID, notification)
     }
 
     companion object {
-        const val CHANNEL_HOURLY = "channel_hourly_planner"
-        const val CHANNEL_EVENTS = "channel_event_reminders"
-        private const val NOTIFICATION_ID_HOURLY_BASE = 2000
+        private const val CHANNEL_ID_REMINDERS = "task_reminders"
+        private const val CHANNEL_ID_SYNC = "gmail_sync"
+        private const val HOURLY_REMINDER_NOTIFICATION_ID = 1
+        private const val EVENT_REMINDER_NOTIFICATION_ID = 2
+        private const val GMAIL_SYNC_NOTIFICATION_ID = 3
     }
 }

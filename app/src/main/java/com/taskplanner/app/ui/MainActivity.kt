@@ -1,47 +1,50 @@
 package com.taskplanner.app.ui
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
-import androidx.core.content.ContextCompat
-import com.taskplanner.app.ui.components.TaskPlannerScreen
-import com.taskplanner.app.ui.theme.TaskPlannerTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 
 class MainActivity : ComponentActivity() {
-
-    private val viewModel: PlannerViewModel by viewModels()
-
-    private val requestNotificationPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            // Permission result handled
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        checkNotificationPermission()
-
         setContent {
-            TaskPlannerTheme {
-                TaskPlannerScreen(viewModel = viewModel)
+            TaskPlannerAppTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    TaskPlannerScreen()
+                }
             }
         }
     }
+}
 
-    private fun checkNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
+@Composable
+fun TaskPlannerScreen() {
+    Text(text = "Welcome to Task Planner App")
+}
+
+@Preview(showBackground = true)
+@Composable
+fun TaskPlannerScreenPreview() {
+    TaskPlannerAppTheme {
+        TaskPlannerScreen()
     }
+}
+
+@Composable
+fun TaskPlannerAppTheme(
+    content: @Composable () -> Unit
+) {
+    MaterialTheme(
+        content = content
+    )
 }
