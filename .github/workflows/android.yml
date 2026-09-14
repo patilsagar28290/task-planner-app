@@ -8,26 +8,29 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-
+    
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     
-    - name: Build APK with Gradle
-      run: ./gradlew assembleDebug
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --info
     
-    - name: Upload APK
+    - name: Upload APK artifact
+      if: success()
       uses: actions/upload-artifact@v4
       with:
-        name: task-planner-apk
+        name: task-planner-debug-apk
         path: app/build/outputs/apk/debug/*.apk
+        if-no-files-found: warn
