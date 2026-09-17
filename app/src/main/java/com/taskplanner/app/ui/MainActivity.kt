@@ -16,15 +16,15 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: PlannerViewModel by viewModels()
 
-    private val requestNotificationPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            // Permission result handled
+    private val requestPermissionsLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            // Notification and Audio permissions handled
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        checkNotificationPermission()
+        checkAndRequestPermissions()
 
         setContent {
             TaskPlannerTheme {
@@ -33,15 +33,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun checkNotificationPermission() {
+    private fun checkAndRequestPermissions() {
+        val permissionsToRequest = mutableListOf<String>()
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
             }
+        }
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissionsToRequest.add(Manifest.permission.RECORD_AUDIO)
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            requestPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
         }
     }
 }

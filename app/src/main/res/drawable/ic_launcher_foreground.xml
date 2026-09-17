@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer Glow Ring -->
+    <path
+        android:strokeColor="#10B981"
+        android:strokeWidth="6"
+        android:fillColor="#00000000"
+        android:pathData="M54,22 A32,32 0 1,1 53.9,22 Z"/>
+    
+    <!-- Clock Center Pointer to 12 o'clock -->
+    <path
+        android:strokeColor="#10B981"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M54,54 L54,28"/>
+
+    <!-- Prominent Checkmark at 12 o'clock -->
+    <path
+        android:fillColor="#10B981"
+        android:pathData="M48,34 L43,29 L39,33 L48,42 L67,23 L63,19 Z"/>
+        
+    <!-- Hour Dots Pacing Markers -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M52,82h4v6h-4zM22,52h6v4h-6zM80,52h6v4h-6z"/>
+</vector>
+
